@@ -2,6 +2,19 @@ import tinytuya
 import customtkinter as ctk
 
 import constants
+import logging
+import sys
+
+logging.basicConfig(
+    format='%(asctime)s [%(levelname)s] : %(message)s  ||[LOGGER:%(name)s] [FUNC:%(funcName)s] [FILE:%(filename)s]',
+    datefmt='%H:%M:%S',
+    level=logging.DEBUG,
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("main.log", mode='a', encoding='utf-8', )
+    ]
+)
+logging.getLogger("tinytuya.core").setLevel(logging.ERROR)
 
 
 class Device:
@@ -15,9 +28,11 @@ class Device:
 
     def turn_on(self):
         self.device.turn_on()
+        logging.info(f"Device {self.name} turned on")
 
     def turn_off(self):
         self.device.turn_off()
+        logging.info(f"Device {self.name} turned off")
 
     def is_working(self):
         result = self.device.status()
@@ -60,6 +75,7 @@ class StatusApp(ctk.CTk):
         toggle_button.pack(side="right", padx=10)
 
     def toggle_device(self, device, status_label, toggle_button):
+        logging.debug("Button pressed")
         device.toggle()
 
         texts = self.get_label_and_button_text(device)
@@ -75,6 +91,7 @@ class StatusApp(ctk.CTk):
         return {"label": label_text, "button": button_text}
 
 
+logging.debug("Creating devices")
 guirlande_outlet = Device(
     "Guirlande Outlet",
     constants.DEV_ID,
@@ -85,7 +102,13 @@ guirlande_outlet = Device(
 DEVICES = [
     guirlande_outlet,
 ]
+logging.info(f"Succsesfully created {len(DEVICES)} devices")
 
 if __name__ == "__main__":
-    app = StatusApp(DEVICES)
-    app.mainloop()
+    logging.info("Starting mainloop")
+    try:
+        app = StatusApp(DEVICES)
+        app.mainloop()
+    except Exception as e:
+        logging.exception("Expedition occurred while in mainloop")
+        input("Press Enter to exit")
